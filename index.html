@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Ular Tangga</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+        :root {
+            --board-bg: #f0fdf4;
+            --border-color: #bbf7d0;
+            --player1-color: #ef4444;
+            --player2-color: #3b82f6;
+            --snake-color: #f43f5e;
+            --ladder-color: #16a34a;
+            --text-dark: #1f2937;
+            --text-light: #4b5563;
+            --bg-light: #ffffff;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #dcfce7;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--ladder-color);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        .board-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 1 / 1;
+            background-color: var(--board-bg);
+            border: 4px solid var(--border-color);
+            border-radius: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .square {
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-start;
+            font-size: 0.8rem;
+            font-weight: 600;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+            padding: 4px;
+        }
+        
+        .square:nth-child(odd) { background-color: #dcfce7; }
+        .square:nth-child(even) { background-color: #bbf7d0; }
+
+        .player {
+            position: absolute;
+            width: 6%;
+            height: 6%;
+            border-radius: 50%;
+            transition: all 0.5s ease-in-out;
+            z-index: 10;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        #player1 { background-color: var(--player1-color); }
+        #player2 { background-color: var(--player2-color); }
+
+        .game-art {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .game-art svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .snake { stroke: var(--snake-color); stroke-width: 5; fill: none; stroke-linecap: round; }
+        .ladder { stroke: var(--ladder-color); stroke-width: 5; fill: none; stroke-linecap: round; }
+
+        .controls {
+            background-color: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+            width: 100%;
+            max-width: 250px;
+        }
+
+        #roll-dice-btn {
+            background-color: var(--ladder-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            width: 100%;
+        }
+
+        #roll-dice-btn:hover { background-color: #15803d; }
+        #roll-dice-btn:active { transform: scale(0.98); }
+        #roll-dice-btn:disabled { background-color: #9ca3af; cursor: not-allowed; }
+
+        .game-info { margin-top: 1rem; }
+        #status { font-size: 1rem; font-weight: 600; min-height: 50px; }
+        #dice-result { font-size: 1.5rem; font-weight: 700; margin-top: 0.5rem; }
+
+        .player-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .player-indicator div { width: 1rem; height: 1rem; border-radius: 50%; }
+
+        #modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        #modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem 3rem;
+            border-radius: 1rem;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        #modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        #modal h2 { margin-top: 0; font-size: 2rem; }
+        #restart-btn {
+            background-color: var(--ladder-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>Ular Tangga Digital</h1>
+        <div class="main-content">
+            <div class="board-wrapper">
+                <div id="game-board"></div>
+                <div id="player1" class="player"></div>
+                <div id="player2" class="player"></div>
+                <div class="game-art">
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <!-- Snakes -->
+                        <path class="snake" d="M 15,85 C 20,75 30,75 35,85" />
+                        <path class="snake" d="M 5,55 C 15,45 15,35 5,25" />
+                        <path class="snake" d="M 35,45 C 45,55 55,45 65,55" />
+                        <path class="snake" d="M 95,25 C 85,15 75,15 65,5" />
+                        <path class="snake" d="M 85,5 C 95,15 95,25 85,35" />
+                        <path class="snake" d="M 15,5 C 5,15 5,25 15,35" />
+
+                        <!-- Ladders -->
+                        <path class="ladder" d="M 5,95 L 25,75" />
+                        <path class="ladder" d="M 45,95 L 25,65" />
+                        <path class="ladder" d="M 85,85 L 95,65" />
+                        <path class="ladder" d="M 75,45 L 95,15" />
+                        <path class="ladder" d="M 45,35 L 25,5" />
+                        <path class="ladder" d="M 55,25 L 45,5" />
+                    </svg>
+                </div>
+            </div>
+            <div class="controls">
+                <h2>Kontrol Permainan</h2>
+                <div class="player-indicator">
+                    <div style="background-color: var(--player1-color);"></div>
+                    <span>Pemain 1</span>
+                </div>
+                <div class="player-indicator">
+                    <div style="background-color: var(--player2-color);"></div>
+                    <span>Pemain 2</span>
+                </div>
+                <div class="game-info">
+                    <p id="status">Giliran Pemain 1 untuk melempar dadu.</p>
+                    <div id="dice-result">🎲</div>
+                </div>
+                <button id="roll-dice-btn">Lempar Dadu!</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal">
+        <div class="modal-content">
+            <h2 id="winner-message"></h2>
+            <button id="restart-btn">Main Lagi</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Game Configuration ---
+            const TOTAL_SQUARES = 100;
+            const players = {
+                p1: { id: 'player1', position: 1 },
+                p2: { id: 'player2', position: 1 }
+            };
+            // Key: start square, Value: end square
+            const snakesAndLadders = {
+                4: 14,   // Ladder
+                9: 31,   // Ladder
+                17: 7,   // Snake
+                20: 38,  // Ladder
+                28: 84,  // Ladder
+                40: 59,  // Ladder
+                51: 67,  // Ladder
+                54: 34,  // Snake
+                62: 19,  // Snake
+                63: 81,  // Ladder
+                64: 60,  // Snake
+                71: 91,  // Ladder
+                87: 24,  // Snake
+                93: 73,  // Snake
+                95: 75,  // Snake
+                99: 78   // Snake
+            };
+
+            // --- DOM Elements ---
+            const board = document.getElementById('game-board');
+            const rollBtn = document.getElementById('roll-dice-btn');
+            const statusEl = document.getElementById('status');
+            const diceResultEl = document.getElementById('dice-result');
+            const modal = document.getElementById('modal');
+            const winnerMessage = document.getElementById('winner-message');
+            const restartBtn = document.getElementById('restart-btn');
+
+            // --- Game State ---
+            let currentPlayer = 'p1';
+            let gameover = false;
+
+            // --- Functions ---
+            function createBoard() {
+                board.innerHTML = '';
+                for (let i = TOTAL_SQUARES; i >= 1; i--) {
+                    const square = document.createElement('div');
+                    square.classList.add('square');
+                    square.dataset.square = i;
+                    square.textContent = i;
+                    board.appendChild(square);
+                }
+            }
+
+            function getCoords(squareNumber) {
+                const row = Math.floor((squareNumber - 1) / 10);
+                let col = (squareNumber - 1) % 10;
+
+                if (row % 2 !== 0) { // For odd rows (from bottom, 0-indexed), reverse column order
+                    col = 9 - col;
+                }
+                
+                const y = (9 - row) * 10;
+                const x = col * 10;
+                
+                return { x: x + 2, y: y + 2 }; // Add offset for centering
+            }
+
+            function updatePlayerPosition(playerKey) {
+                const playerEl = document.getElementById(players[playerKey].id);
+                const coords = getCoords(players[playerKey].position);
+                playerEl.style.left = `${coords.x}%`;
+                playerEl.style.top = `${coords.y}%`;
+            }
+            
+            function switchPlayer() {
+                currentPlayer = (currentPlayer === 'p1') ? 'p2' : 'p1';
+                const playerNumber = (currentPlayer === 'p1') ? 1 : 2;
+                statusEl.textContent = `Giliran Pemain ${playerNumber} untuk melempar dadu.`;
+            }
+
+            function handleRoll() {
+                if (gameover) return;
+
+                const diceRoll = Math.floor(Math.random() * 6) + 1;
+                diceResultEl.textContent = `Dadu: ${diceRoll}`;
+
+                let player = players[currentPlayer];
+                let newPosition = player.position + diceRoll;
+
+                if (newPosition > TOTAL_SQUARES) {
+                    statusEl.textContent = `Terlalu jauh! Butuh ${TOTAL_SQUARES - player.position} atau kurang.`;
+                    switchPlayer();
+                    return;
+                }
+
+                player.position = newPosition;
+                updatePlayerPosition(currentPlayer);
+                
+                setTimeout(() => {
+                    // Check for snakes or ladders
+                    if (snakesAndLadders[player.position]) {
+                        const endPosition = snakesAndLadders[player.position];
+                        const type = endPosition > player.position ? 'naik Tangga' : 'turun Ular';
+                        statusEl.textContent = `Pemain ${(currentPlayer === 'p1') ? 1 : 2} ${type} ke kotak ${endPosition}!`;
+                        player.position = endPosition;
+                        updatePlayerPosition(currentPlayer);
+                    }
+
+                    // Check for win
+                    if (player.position === TOTAL_SQUARES) {
+                        gameover = true;
+                        winnerMessage.textContent = `Pemain ${(currentPlayer === 'p1') ? 1 : 2} Menang!`;
+                        modal.classList.add('show');
+                        rollBtn.disabled = true;
+                        statusEl.textContent = 'Permainan Selesai!';
+                        return;
+                    }
+
+                    switchPlayer();
+                }, 700);
+            }
+
+            function resetGame() {
+                players.p1.position = 1;
+                players.p2.position = 1;
+                currentPlayer = 'p1';
+                gameover = false;
+
+                updatePlayerPosition('p1');
+                updatePlayerPosition('p2');
+
+                statusEl.textContent = 'Giliran Pemain 1 untuk melempar dadu.';
+                diceResultEl.textContent = '🎲';
+                rollBtn.disabled = false;
+                modal.classList.remove('show');
+            }
+
+            // --- Initial Setup ---
+            createBoard();
+            resetGame();
+
+            // --- Event Listeners ---
+            rollBtn.addEventListener('click', handleRoll);
+            restartBtn.addEventListener('click', resetGame);
+        });
+    </script>
+</body>
+</html>
