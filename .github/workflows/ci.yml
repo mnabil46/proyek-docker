@@ -1,45 +1,34 @@
-# Nama workflow Anda, akan muncul di tab Actions di GitHub
 name: Docker CI Pipeline
 
-# Trigger: Workflow ini akan berjalan setiap kali ada push ke branch "main"
+# Trigger: Menjalankan workflow setiap kali ada push ke branch "main"
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  # Hanya ada satu job: membangun dan mendorong image
   build_and_push_image:
-    # Menggunakan server virtual Ubuntu terbaru dari GitHub untuk menjalankan job
     runs-on: ubuntu-latest
-
-    # Memberi izin kepada workflow untuk menulis ke GitHub Packages (Penting!)
     permissions:
       contents: read
       packages: write
 
     steps:
-      # Langkah 1: Mengambil kode dari repository Anda ke dalam runner
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Langkah 2: Login ke GitHub Container Registry (GHCR)
-      # Menggunakan token bawaan agar tidak perlu membuat PAT manual
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }} # Username Anda secara otomatis
-          password: ${{ secrets.GITHUB_TOKEN }} # Token sementara yang aman
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Langkah 3: Membangun dan Mendorong Docker Image
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
-          # Sesuaikan dengan path ke folder yang berisi Dockerfile Anda
-          # Jika Dockerfile ada di root, gunakan context: .
+          # PASTIKAN PATH INI BENAR menunjuk ke folder yang berisi Dockerfile
           context: ./proyek-ular-tangga
-          # Mendorong image setelah berhasil dibuat
           push: true
-          # Membuat tag untuk image. Format ini adalah standar untuk GHCR.
-          # Ganti "proyek-ular-tangga" dengan nama image yang Anda inginkan.
-          tags: ghcr.io/${{ github.actor }}/proyek-docker:latest
+          # --- INI BAGIAN YANG DIPERBAIKI ---
+          # Format yang benar dan aman, menggunakan nama owner repo dan nama repo
+          tags: ghcr.io/${{ github.repository_owner }}/proyek-docker:latest
