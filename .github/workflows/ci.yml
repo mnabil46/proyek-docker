@@ -1,6 +1,5 @@
 name: Docker CI Pipeline
 
-# Trigger: Menjalankan workflow setiap kali ada push ke branch "main"
 on:
   push:
     branches: [ "main" ]
@@ -26,9 +25,9 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
-          # PASTIKAN PATH INI BENAR menunjuk ke folder yang berisi Dockerfile
-          context: ./proyek-ular-tangga
+          # Pastikan path ini benar menunjuk ke folder yang berisi Dockerfile
+          context: ./proyek-ular-tangga 
           push: true
-          # --- INI BAGIAN YANG DIPERBAIKI ---
-          # Format yang benar dan aman, menggunakan nama owner repo dan nama repo
-          tags: ghcr.io/${{ github.repository_owner }}/proyek-docker:latest
+          # --- SOLUSI PASTI ---
+          # Menggunakan username Anda yang sudah ditulis manual dalam huruf kecil
+          tags: ghcr.io/muhamadnabil-28/proyek-docker:latest
