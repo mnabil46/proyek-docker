@@ -26,7 +26,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           # Pastikan path ini benar menunjuk ke folder yang berisi Dockerfile
-          context: ./proyek-ular-tangga 
+          context: .
           push: true
           # --- SOLUSI PASTI ---
           # Menggunakan username Anda yang sudah ditulis manual dalam huruf kecil
